@@ -285,6 +285,16 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
                 toolkit.get_validator('ignore_missing')
             ],
         })
+       
+        # Append computed fields in the __after stage
+
+        def f(k, data, errors, context):
+            data[('baz_view',)] = u'I am a computed Baz'
+            pass
+
+        if not schema.get('__after'):
+            schema['__after'] = []
+        schema['__after'].append(f)
 
         return schema
 
