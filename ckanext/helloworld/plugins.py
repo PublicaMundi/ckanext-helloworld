@@ -193,9 +193,14 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
             #raise StopOnError
             pass
 
-        def music_title_converter_2(key, data, errors, context):
+        def music_title_converter_2(value, context):
+            ''' Demo of another style of validator/converter. The return value is considered as 
+            the converted value for this field. '''
+            
             #raise Exception ('Breakpoint music_title_converter_2')
-            pass
+            #raise Invalid('The music title is malformed')
+            from string import capitalize
+            return capitalize(value)
 
         def after_validation_processor(key, data, errors, context):
             assert key[0] == '__after', 'This validator can only be invoked in the __after stage'
@@ -230,9 +235,9 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
             # convert_to_extras instead of convert_to_tags.
             'music_title': [
                 toolkit.get_validator('ignore_missing'),
-                toolkit.get_converter('convert_to_extras'),
                 music_title_converter_1,
                 music_title_converter_2,
+                toolkit.get_converter('convert_to_extras'),
             ],
         })
 
@@ -280,6 +285,16 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
                 toolkit.get_validator('ignore_missing')
             ],
         })
+       
+        # Append computed fields in the __after stage
+
+        def f(k, data, errors, context):
+            data[('baz_view',)] = u'I am a computed Baz'
+            pass
+
+        if not schema.get('__after'):
+            schema['__after'] = []
+        schema['__after'].append(f)
 
         return schema
 
