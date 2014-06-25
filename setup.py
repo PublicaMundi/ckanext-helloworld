@@ -30,7 +30,9 @@ setup(
         helloworld_dataset = ckanext.helloworld.plugins:DatasetForm
 
         [paste.paster_command]
-
+        
+        helloworld = ckanext.helloworld.commands:CommandDispatcher
+        
         helloworld-greet = ckanext.helloworld.commands:Greet
 
         [fanstatic.libraries]
