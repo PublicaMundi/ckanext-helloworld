@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 import sys, os
 
-version = '0.8'
+version = '0.9'
 
 setup(
 	name='ckanext-helloworld',
@@ -31,7 +31,7 @@ setup(
 
         [paste.paster_command]
         
-        helloworld = ckanext.helloworld.commands:CommandDispatcher
+        helloworld = ckanext.helloworld.commands:Command
         
         helloworld-greet = ckanext.helloworld.commands:Greet
 
