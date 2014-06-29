@@ -3,8 +3,9 @@ import os.path
 import logging
 import optparse
 from optparse import make_option 
-import paste.script
+import paste.script.command
 
+import ckan.lib.cli
 from ckan.lib.cli import CkanCommand
 
 def parser_error(msg):
@@ -13,7 +14,7 @@ def parser_error(msg):
     '''
     raise ValueError(msg)
 
-class CommandDispatcher(CkanCommand):
+class CommandDispatcher(ckan.lib.cli.CkanCommand):
     '''A command dispatcher for various helloworld-related subcommands'''
 
     __usage = '''paster [PASTER-OPTIONS] helloworld [--config INI_FILE] [--setup-app] %(name)s [%(name)s-OPTIONS]'''

@@ -18,8 +18,8 @@ class Command(CommandDispatcher):
     '''
     This command should be invoked as below:
 
-    paster [PASTER-OPTIONS] helloworld --config=../ckan/development.ini [COMMAND] [COMMAND-OPTIONS]
-
+    >>> paster [PASTER-OPTIONS] helloworld --config=../ckan/development.ini [COMMAND] [COMMAND-OPTIONS]
+    
     '''
 
     summary = 'An entry point for helloworld-related Paster commands'
@@ -53,9 +53,7 @@ class Greet(CkanCommand):
     '''
     This is an example of a helloworld-specific paster command:
 
-    The command should be invoked as below:
-
-    paster [PASTER-OPTIONS] helloworld-greet --config=../ckan/development.ini [COMMAND-OPTIONS]
+    >>> paster [PASTER-OPTIONS] helloworld-greet --config=../ckan/development.ini [COMMAND-OPTIONS]
 
     '''
 
