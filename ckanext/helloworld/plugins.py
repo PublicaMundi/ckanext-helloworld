@@ -1,7 +1,9 @@
 # Plugins for ckanext-helloworld
 
-import json, jsonpickle, time
-
+import json
+import time
+import jsonpickle
+import copy
 import logging
 
 import ckan.model           as model
@@ -206,13 +208,15 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
             assert key[0] == '__after', 'This validator can only be invoked in the __after stage'
             #raise Exception ('Breakpoint after_validation_processor')
             # Demo of howto create/update an automatic extra field 
-            extras_list = data.get(('extras',), [])
-            modification_metadata_key = 'modified-at'
+            extras_list = data.get(('extras',))
+            if not extras_list:
+                extras_list = data[('extras',)] = []
+            modification_metadata_key = 'record_modified_at'
             modification_metadata_exists = False
             datestamp = time.strftime('%Y-%m-%d %T')
-            for x in extras_list:
-                if x.get('key') == modification_metadata_key:
-                    x['value'] = datestamp
+            for item in extras_list:
+                if item.get('key') == modification_metadata_key:
+                    item['value'] = datestamp
                     modification_metadata_exists = True
             if not modification_metadata_exists:
                 extras_list.append ({ 'key': modification_metadata_key, 'value': datestamp })
@@ -242,13 +246,11 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
         })
 
         # Add callbacks to the '__after' pseudo-key to be invoked after all key-based validators/converters
-
         if not schema.get('__after'):
             schema['__after'] = []
         schema['__after'].append(after_validation_processor)
 
         # A similar hook is also provided by the '__before' pseudo-key with obvious functionality.
-
         if not schema.get('__before'):
             schema['__before'] = []
         # any additional validator must be inserted before the default 'ignore' one. 
@@ -284,6 +286,10 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
                 toolkit.get_converter('convert_from_extras'),
                 toolkit.get_validator('ignore_missing')
             ],
+            # Add our non-input field (created at after_validation_processor)
+            'record_modified_at': [
+                toolkit.get_converter('convert_from_extras'),
+            ]
         })
        
         # Append computed fields in the __after stage

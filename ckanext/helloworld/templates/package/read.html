@@ -5,13 +5,20 @@
 {% block package_description %}
   {{ super() }}
 
+  {# Add our custom "music_title" field to the dataset read page. #}
+  {% if pkg.get('music_genre') %}
+    <section id="dataset-music_title" class="resources module-content">
+    <p><strong>{{ _('Music Title') }}</strong>: {{ pkg.music_title }}</p>
+    </section>
+  {% endif %}
+ 
   {# Add our custom "music_genre" field to the dataset read page. #}
   {% if pkg.get('music_genre') %}
     <section id="dataset-music_genre" class="resources module-content">
     <p><strong>{{ _('Music Genre') }}</strong>: {{ pkg.music_genre.0 }}</p>
     </section>
   {% endif %}
-  
+
   <section id="dataset-helloword_author" class="resources module-content">
     <strong>Extended By:</strong> <span>{{ pkg.get('helloworld', {}).get('author', 'n/a') }}</span>
   </section>

@@ -12,7 +12,7 @@ your custom field won't work!!
 
 
 {% block package_metadata_fields %}
-
+  
   {% set music_genres = data.get('music_genre', [None]) %}
   {{ form.select('music_genre', 
         label = _('Music Genre'), 

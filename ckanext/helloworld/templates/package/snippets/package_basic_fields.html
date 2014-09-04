@@ -7,6 +7,7 @@ Add widgets for our basic custom (extension-specific) fields
 #}
 
 {% block package_basic_fields_custom %}
+  
   {{ form.input('music_title', 
         label=_('Music Title'), id='field-music_title', 
         placeholder=_('a wonderfull piece of music'), 
@@ -14,6 +15,7 @@ Add widgets for our basic custom (extension-specific) fields
         error=errors.get('music_title'), 
         classes=['control-medium']) 
   }}
+
 {% endblock %}
 
 {#
