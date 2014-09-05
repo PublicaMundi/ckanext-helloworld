@@ -20,6 +20,14 @@ your custom field won't work!!
         selected = music_genres.0, 
         attrs = { 'data-module': 'no-autocomplete' }) 
   }}
+ 
+  {{ form.input('foo.x1', 
+        label=_('Foo/x1'), id='field-foo.x1', 
+        placeholder=_('a wonderfull foo/x1'), 
+        value=data.get('foo.x1'), 
+        error=errors.get('foo.x1'), 
+        classes=['control-medium']) 
+  }}
   
   {{ super() }}
 

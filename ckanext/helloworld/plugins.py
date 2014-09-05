@@ -211,20 +211,30 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
             extras_list = data.get(('extras',))
             if not extras_list:
                 extras_list = data[('extras',)] = []
-            modification_metadata_key = 'record_modified_at'
-            modification_metadata_exists = False
+            # Note Append "record_modified_at" field as a non-input field
             datestamp = time.strftime('%Y-%m-%d %T')
-            for item in extras_list:
-                if item.get('key') == modification_metadata_key:
-                    item['value'] = datestamp
-                    modification_metadata_exists = True
-            if not modification_metadata_exists:
-                extras_list.append ({ 'key': modification_metadata_key, 'value': datestamp })
-            pass
+            items = filter(lambda t: t['key'] == 'record_modified_at', extras_list)
+            if items:
+                items[0]['value'] = datestamp
+            else:
+                extras_list.append({ 'key': 'record_modified_at', 'value': datestamp })
+            # Note Append "foo.x1" field as dynamic (not registered under modify schema) field  
+            items = filter(lambda t: t['key'] == 'foo.x1', extras_list)
+            if items:
+                items[0]['value'] = data.get(('foo.x1',))
+            else:
+                extras_list.append({ 'key': 'foo.x1', 'value': data.get(('foo.x1',)) })
+                
 
         def before_validation_processor(key, data, errors, context):
             assert key[0] == '__before', 'This validator can only be invoked in the __before stage'
             #raise Exception ('Breakpoint before_validation_processor')
+            # Note Add dynamic field (not registered under modify schema) "foo.x1" to the fields
+            # we take into account. If we omitted this step, the ('__extras',) item would have 
+            # been lost (along with the POSTed value). 
+            if context.get('package'):
+                # The package is created (at least as draft)
+                data[('foo.x1',)] = data[('__extras',)].get('foo.x1')
             pass
 
         # Update default validation schema (inherited from DefaultDatasetForm)
@@ -243,6 +253,12 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
                 music_title_converter_2,
                 toolkit.get_converter('convert_to_extras'),
             ],
+            # Note We do not explicitly declare "foo.x1" schema, because we'll add it 
+            # dynamically at before_validation_processor.
+            #'foo.x1': [
+            #    toolkit.get_validator('ignore_missing'),
+            #    toolkit.get_converter('convert_to_extras'), 
+            #]
         })
 
         # Add callbacks to the '__after' pseudo-key to be invoked after all key-based validators/converters
@@ -289,6 +305,11 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
             # Add our non-input field (created at after_validation_processor)
             'record_modified_at': [
                 toolkit.get_converter('convert_from_extras'),
+            ],
+            # Add our dynamic (not registered at modify schema) field
+            'foo.x1': [
+                toolkit.get_converter('convert_from_extras'),
+                toolkit.get_validator('ignore_missing')
             ]
         })
        
