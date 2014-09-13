@@ -25,6 +25,7 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
     p.implements(p.IConfigurable, inherit=True)
     p.implements(p.IConfigurer, inherit=True)
     p.implements(p.IDatasetForm, inherit=True)
+    p.implements(p.IPackageController, inherit=True)
 
     ## helper methods ## 
 
@@ -100,36 +101,6 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
             results[org['name']] = org
         return results
 
-    @classmethod
-    def debug_template_vars(cls, debug_info):
-        ''' A debug helper similar to h.debug_full_info_as_list '''
-        out = {}
-        ignored_keys = [
-            'c', 'app_globals', 'g', 'h', 'request', 'tmpl_context', 'actions', 'translator', 'session', 'N_', 'ungettext', 'config', 'response', '_']
-        ignored_context_keys = [
-            '__class__', '__context', '__delattr__', '__dict__', '__doc__', '__format__', '__getattr__', '__getattribute__', '__hash__', '__init__',
-            '__module__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__',
-            '__weakref__', 'action', 'environ', 'pylons', 'start_response', 'userobj', 'page']
-
-        debug_vars = debug_info['vars']
-
-        for key in filter(lambda k: not k in ignored_keys, debug_vars.keys()):
-            out[key] = debug_vars[key]
-
-        if 'tmpl_context' in debug_vars:
-            for key in filter(lambda k: not k in ignored_context_keys, debug_info['c_vars']):
-                val = getattr(debug_vars['tmpl_context'], key)
-                if hasattr(val, '__call__'):
-                    val = repr(val)
-                out['c.%s' % key] = val
-
-        return out
-
-    @classmethod
-    def dump_jsonpickle(cls, obj):
-        ''' Encode (i.e serialize) an object using jsonpickle '''
-        return jsonpickle.encode(obj)
-
     ## ITemplateHelpers interface ##
 
     def get_helpers(self):
@@ -143,9 +114,6 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
             'music_genres_options': self.music_genres_options,
             'organization_list_objects': self.organization_list_objects,
             'organization_dict_objects': self.organization_dict_objects,
-            # define debug helpers
-            'debug_template_vars': self.debug_template_vars,
-            'dump_jsonpickle': self.dump_jsonpickle,
         }
 
     ## IConfigurer interface ##
@@ -333,7 +301,7 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
         c = toolkit.c
         c.helloworld_magic_number = 99
         if c.pkg_dict:
-            c.pkg_dict['helloworld'] = { 'author': 'foofootos', 'plugin-name': self.__class__.__name__ }
+            c.pkg_dict['helloworld'] = { 'plugin-name': self.__class__.__name__ }
 
     # Note for all *_template hooks: 
     # We choose not to modify the path for each template (so we simply call the super() method). 
@@ -357,4 +325,78 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
 
     def history_template(self):
         return super(DatasetForm, self).history_template()
+    
+    ## IPackageController interface ##
+    
+    def after_create(self, context, pkg_dict):
+        log1.debug('after_create: Package %s is created', pkg_dict.get('name'))
+        pass
+
+    def after_update(self, context, pkg_dict):
+        log1.debug('after_update: Package %s is updated', pkg_dict.get('name'))
+        pass
+
+    def after_show(self, context, pkg_dict):
+        '''Convert dataset_type-typed parts of pkg_dict to a nested dict or an object.
+
+        This is for display (template enviroment and api results) purposes only, 
+        and should *not* affect the way the read schema is being used.
+        '''
+
+        is_validated = context.get('validate', True)
+        for_view = context.get('for_view', False)
+        
+        log1.debug('after_show: Package %s is shown: view=%s validated=%s api=%s', 
+            pkg_dict.get('name'), for_view, is_validated, context.get('api_version'))
+        
+        if not is_validated:
+            # Noop: the extras are not yet promoted to 1st-level fields
+            return
+
+        # Add more (computed) items to pkg_dict ... 
+
+        return
+        #return pkg_dict
+     
+    def before_search(self, search_params):
+        #search_params['q'] = 'extras_qoo:*';
+        #search_params['extras'] = { 'ext_qoo': 'far' }
+        return search_params
+   
+    def after_search(self, search_results, search_params):
+        #raise Exception('Breakpoint')
+        return search_results
+
+    def before_index(self, pkg_dict):
+        log1.debug('before_index: Package %s is indexed', pkg_dict.get('name'))
+        return pkg_dict
+
+    def before_view(self, pkg_dict):
+        log1.debug('before_view: Package %s is prepared for view', pkg_dict.get('name'))
+
+        # This hook can add/hide/transform package fields before sent to the template.
+        
+        # add some extras to the 2-column table
+        
+        dt = pkg_dict.get('dataset_type') 
+
+        extras = pkg_dict.get('extras', [])
+        if not extras:
+            pkg_dict['extras'] = extras
+
+        extras.append({ 'key': 'Music Title', 'value': pkg_dict.get('music_title', 'n/a') })
+        extras.append({ 'key': 'Music Genre', 'value': pkg_dict.get('music_genre', 'n/a') })
+
+        # or we can translate keys ...
+        
+        field_key_map = {
+            u'updated_at': _t(u'Updated'),
+            u'created_at': _t(u'Created'),
+        }
+        for item in extras:
+            k = item.get('key')
+            item['key'] = field_key_map.get(k, k)
+        
+        return pkg_dict
+
 
