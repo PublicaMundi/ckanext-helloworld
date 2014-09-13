@@ -341,6 +341,15 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
 
         This is for display (template enviroment and api results) purposes only, 
         and should *not* affect the way the read schema is being used.
+
+        :param context: The context under which this hook is invoked
+        :type context: dict
+        :param pkg_dict: The package dict  
+        :type pkg_dict: dict
+
+        :returns: None
+        :raises: None
+        
         '''
 
         is_validated = context.get('validate', True)
